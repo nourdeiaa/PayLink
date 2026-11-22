@@ -1,0 +1,117 @@
+
+@startuml
+title PayLink - Pay a Bill Sequence Diagram
+
+autonumber
+
+actor Customer
+participant "Mobile App" as App
+participant "API Gateway" as Gateway
+participant "Payment Service" as Payment
+participant "Fraud Service" as Fraud
+participant "Fee Service" as Fee
+participant "Wallet Service" as Wallet
+participant "Biller Adapter" as Adapter
+participant "External Biller" as Biller
+queue "Message Broker" as Broker
+participant "Notification Service" as Notification
+
+== Payment Request ==
+
+Customer -> App: Select bill and enter payment details
+App -> Gateway: Submit payment request
+Gateway -> Payment: Forward request
+
+Payment -> Payment: Check idempotency key
+
+alt Duplicate request
+    Payment --> Gateway: Return existing payment status
+    Gateway --> App: Existing payment result
+else New request
+
+    == Validation ==
+
+    Payment -> Fraud: Validate customer, limits and transaction
+    Fraud --> Payment: Validation result
+
+    alt Fraud check fails
+        Payment -> Payment: Set status = REJECTED
+        Payment --> Gateway: Payment rejected
+        Gateway --> App: Display rejection reason
+
+    else Fraud check passes
+
+        == Fee Calculation ==
+
+        Payment -> Fee: Calculate service fee
+        Fee --> Payment: Return fee and total amount
+
+        == Wallet Reservation ==
+
+        Payment -> Wallet: Hold total amount
+        Wallet -> Wallet: Check available balance
+
+        alt Insufficient balance
+            Wallet --> Payment: Hold rejected
+            Payment --> Gateway: Insufficient balance
+            Gateway --> App: Display insufficient balance
+
+        else Sufficient balance
+            Wallet -> Wallet: Reserve funds
+            Wallet --> Payment: Hold successful
+
+            == Biller Processing ==
+
+            Payment -> Payment: Set status = PROCESSING
+            Payment -> Adapter: Submit payment request
+            Adapter -> Biller: Send bill payment
+
+            alt Biller confirms payment
+                Biller --> Adapter: Success + biller reference
+                Adapter --> Payment: Payment confirmed
+
+                Payment -> Wallet: Capture held amount
+                Wallet --> Payment: Funds captured
+
+                Payment -> Payment: Set status = SUCCESS
+                Payment -> Broker: Publish PaymentSucceeded event
+
+                Payment --> Gateway: Payment successful
+                Gateway --> App: Display confirmation
+
+            else Biller rejects payment
+                Biller --> Adapter: Failure + reason
+                Adapter --> Payment: Payment rejected
+
+                Payment -> Wallet: Release held amount
+                Wallet --> Payment: Funds released
+
+                Payment -> Payment: Set status = FAILED
+                Payment -> Broker: Publish PaymentFailed event
+
+                Payment --> Gateway: Payment failed
+                Gateway --> App: Display failure reason
+
+            else Biller timeout
+                Adapter --> Payment: Timeout / Unknown result
+
+                Payment -> Payment: Set status = UNKNOWN
+                Payment --> Gateway: Payment status unknown
+                Gateway --> App: Show processing message
+
+                note over Payment, Biller
+                  Do not release held funds or retry
+                  blindly. Reconcile with the biller
+                  using the same idempotency key.
+                end note
+            end
+        end
+    end
+end
+
+== Asynchronous Notifications ==
+
+Broker -> Notification: Consume payment event
+Notification -> Customer: Send SMS / Push notification
+
+@enduml
