@@ -173,6 +173,86 @@ As a customer, I want PayLink to check my payment limits, so that I cannot make 
 - Given a verified customer has reached the daily limit of 30,000 EGP, when they attempt another payment, then it is rejected.
 ------------------------------------
 
+FR-19 — Payment velocity rule (Should)
+
+As a system, I want to block accounts that make too many payments in a short time so that suspicious activity is prevented.
+- Given an account makes more than 5 payments within 60 seconds,
+- When the sixth or later payment is attempted,
+- Then the account is blocked for 10 minutes.
+------------------------------------
+
+FR-20 — Search payment (Must)
+
+As a support employee, I want to search for a payment by its reference so that I can investigate its history.
+- Given a support employee has permission to access payment records,
+- When they search using a payment reference,
+- Then the system displays the payment's full history.
+------------------------------------
+
+FR-21 — Block and unblock accounts (Should)
+
+As a support employee, I want to block and unblock customer accounts so that I can manage suspicious or problematic accounts.
+- Given a support employee is authorized,
+- When they block or unblock an account,
+- Then the system updates the account status and records the action.
+------------------------------------
+
+FR-22 — Notifications (Must)
+
+As a customer, I want to receive SMS and push notifications when a payment succeeds or fails so that I know its result.
+- Given a payment is completed or failed,
+- When the payment status changes,
+- Then the system sends an SMS and push notification to the customer.
+------------------------------------
+
+FR-23 — Notification retries (Should)
+
+As a system, I want to retry failed notifications so that temporary provider failures do not prevent customers from receiving updates.
+- Given an SMS or email notification fails,
+- When the system retries delivery,
+- Then it retries 3 times and marks the notification as undelivered if all attempts fail.
+------------------------------------
+
+FR-24 — Edit fees and limits (Should)
+
+As an admin, I want to edit fee and limit values without redeploying the application so that business rules can be updated easily.
+- Given an admin is authorized,
+- When they update a fee or limit,
+- Then the system saves the new configuration without requiring redeployment.
+------------------------------------
+
+FR-25 — Audit log (Must)
+
+As a system administrator, I want every money movement and admin action recorded so that activities can be traced.
+- Given a money movement or admin action occurs,
+- When the action is performed,
+- Then the system records it in an audit log.
+------------------------------------
+
+FR-26 — Reconciliation report (Should)
+
+As a support employee, I want a daily reconciliation report so that I can identify differences between PayLink payments and biller settlement files.
+- Given a settlement file is received,
+- When the reconciliation process runs,
+- Then the system compares the file with PayLink's payment records and produces a report of differences.
+------------------------------------
+
+FR-27 — Request refund (Could)
+
+As a customer, I want to request a refund for a completed payment so that support can review my refund request.
+- Given a customer has a completed payment,
+- When they submit a refund request,
+- Then the system records the request for support approval.
+------------------------------------
+
+FR-28 — Daily totals (Could)
+
+As an admin, I want to view daily payment statistics so that I can monitor business performance.
+- Given daily payment data is available,
+- When the admin opens the daily totals report,
+- Then the system displays payments, fees earned, commissions paid and failures per biller.
+------------------------------------
+
 
 
 ## 4. Non-Functional Requirements
@@ -199,6 +279,18 @@ NFR-4 — Testability
 
 - Requirement: At least 70% line coverage must be achieved on domain logic.
 - Measurement: The automated CI pipeline produces a coverage report showing at least 70% coverage for domain logic.
+------------------------------------
+
+NFR-5 — Resilience
+- Requirement: An outage of one biller must not stop payments to other billers.
+- Measurement: Test that payments to an available biller still work while another mock biller is unavailable.
+------------------------------------
+
+NFR-6 — Auditability
+- Requirement: Every money movement must have an audit record containing who, when and why.
+- Measurement: 100% of money movements have the required audit record.
+------------------------------------
+
 
 ## 5. Questions, Ambiguities and Decisions
 
