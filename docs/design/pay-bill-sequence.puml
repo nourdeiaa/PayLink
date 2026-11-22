@@ -115,4 +115,3 @@ Broker -> Notification: Consume payment event
 Notification -> Customer: Send SMS / Push notification
 
 @enduml
-```
