@@ -1,0 +1,59 @@
+@startuml
+
+title PayLink - Payment State Diagram
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam state {
+    BackgroundColor #EAF2F8
+    BorderColor #34495E
+    ArrowColor #34495E
+    FontColor #2C3E50
+}
+
+[*] --> Initiated
+
+' Initial validation
+Initiated --> FundsHeld : Fraud checks pass\nand sufficient funds available
+Initiated --> Rejected : Fraud check fails\nor insufficient funds
+
+' Wallet hold and biller request
+FundsHeld --> SentToBiller : Payment request sent
+
+' Biller response
+SentToBiller --> Completed : Biller confirms payment
+SentToBiller --> Failed : Biller refuses payment
+SentToBiller --> Unknown : Timeout (10 seconds)
+
+' Resolve unknown payments
+Unknown --> Completed : Biller later confirms
+Unknown --> Failed : Biller refuses or\nreconciliation confirms no payment
+
+' Refund failed payments
+Failed --> Refunded : Held funds released\nto customer wallet
+
+' Final states
+Completed --> [*]
+Rejected --> [*]
+Refunded --> [*]
+
+note right of Unknown
+  Payment remains pending.
+  Funds stay held.
+  Never refund automatically
+  while the result is unknown.
+end note
+
+note bottom of Completed
+  Final state
+end note
+
+note bottom of Rejected
+  Final state
+end note
+
+note bottom of Refunded
+  Final state
+end note
+
+@enduml
