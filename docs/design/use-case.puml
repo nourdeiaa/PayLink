@@ -1,0 +1,91 @@
+@startuml
+left to right direction
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+' PRIMARY ACTORS
+actor Customer
+actor Agent
+actor Admin
+actor "Support Employee" as Support
+
+' SECONDARY ACTORS
+actor Biller
+actor "Notification Provider" as Notification
+
+rectangle "PayLink System" {
+
+  ' Customer
+  usecase "Register Account" as UC1
+  usecase "Upgrade Verification" as UC2
+  usecase "View Wallet Balance" as UC3
+  usecase "View Transaction History" as UC4
+  usecase "Top Up Wallet" as UC5
+  usecase "View Billers and Services" as UC6
+  usecase "Inquire About Bill" as UC7
+  usecase "Pay Bill" as UC8
+  usecase "Request Refund" as UC9
+
+  ' Agent
+  usecase "Pay Bill on Behalf\nof Customer" as UC10
+
+  ' Admin
+  usecase "Manage Billers and Services" as UC11
+  usecase "Configure Fees and Limits" as UC12
+  usecase "View Daily Totals" as UC13
+
+  ' Support
+  usecase "Search Payment" as UC14
+  usecase "View Payment History" as UC15
+  usecase "Block / Unblock Account" as UC16
+  usecase "Approve Refund" as UC17
+
+  ' External interactions
+  usecase "Inquire About Bill" as UC18
+  usecase "Process Biller Payment" as UC19
+  usecase "Handle Payment Callback" as UC20
+  usecase "Send Notifications" as UC21
+
+  ' Relationships
+  UC10 ..> UC8 : <<include>>
+}
+
+' PRIMARY ACTORS ON LEFT
+Customer -- UC1
+Customer -- UC2
+Customer -- UC3
+Customer -- UC4
+Customer -- UC5
+Customer -- UC6
+Customer -- UC7
+Customer -- UC8
+Customer -- UC9
+
+Agent -- UC10
+
+Admin -- UC11
+Admin -- UC12
+Admin -- UC13
+
+Support -- UC14
+Support -- UC15
+Support -- UC16
+Support -- UC17
+
+' SECONDARY ACTORS ON RIGHT
+UC18 -- Biller
+UC19 -- Biller
+UC20 -- Biller
+UC21 -- Notification
+
+' LAYOUT HINTS
+Customer -[hidden]right- UC1
+Agent -[hidden]right- UC10
+Admin -[hidden]right- UC11
+Support -[hidden]right- UC14
+
+UC18 -[hidden]right- Biller
+UC21 -[hidden]right- Notification
+
+@enduml
