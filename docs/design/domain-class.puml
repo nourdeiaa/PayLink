@@ -1,0 +1,118 @@
+@startuml
+title PayLink - Domain Class Diagram
+
+skinparam classAttributeIconSize 0
+
+' ==================== ENUMS ====================
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum EntryType {
+  CREDIT
+  DEBIT
+  HOLD
+  RELEASE
+}
+
+enum CommissionStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum FeeType {
+  FIXED
+  PERCENTAGE
+}
+
+' ==================== CLASSES ====================
+
+class Customer {
+  +id: int
+  +name: string
+  +phone: string
+  +verificationLevel: string
+}
+
+class Wallet {
+  +id: int
+  +availableBalance: decimal
+  +heldBalance: decimal
+}
+
+class LedgerEntry {
+  +id: int
+  +amount: decimal
+  +entryType: EntryType
+  +createdAt: datetime
+}
+
+class Payment {
+  +id: int
+  +reference: string
+  +amount: decimal
+  +fee: decimal
+  +status: PaymentStatus
+  +idempotencyKey: string
+}
+
+class Biller {
+  +id: int
+  +name: string
+  +protocol: string
+}
+
+class Service {
+  +id: int
+  +name: string
+  +active: boolean
+}
+
+class FeeRule {
+  +id: int
+  +feeType: FeeType
+  +feeValue: decimal
+}
+
+class Agent {
+  +id: int
+  +name: string
+}
+
+class Commission {
+  +id: int
+  +amount: decimal
+  +status: CommissionStatus
+}
+
+' ==================== RELATIONSHIPS ====================
+
+Customer "1" -- "1" Wallet : owns
+
+Wallet "1" *-- "0..*" LedgerEntry : records
+
+Customer "1" -- "0..*" Payment : makes
+
+Wallet "1" -- "0..*" Payment : used for
+
+Payment "0..*" -- "1" Service : pays for
+
+Biller "1" -- "1..*" Service : provides
+
+Service "1" -- "0..*" FeeRule : defines
+
+Payment "1" -- "0..*" LedgerEntry : generates
+
+Payment "1" -- "0..1" Commission : generates
+
+Agent "1" -- "0..*" Commission : earns
+
+Agent "0..1" -- "0..*" Payment : assists with
+
+@enduml
