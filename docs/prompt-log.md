@@ -199,3 +199,185 @@ end
 
 @enduml
 
+-------------------------
+
+*REFUND SEQUENCE DIAGRAM*
+
+@startuml
+actor Customer
+participant "Payment Processing" as Payment
+participant "Biller Integration" as Biller
+participant "Accounts and Wallet" as Wallet
+participant "Ledger" as Ledger
+participant "Notifications" as Notify
+
+Customer -> Payment: Pay bill
+Payment -> Wallet: Hold payment funds
+Wallet --> Payment: Hold created
+
+Payment -> Biller: Send payment request
+Biller --> Payment: Payment refused
+
+Payment -> Payment: Change status to Failed
+Payment -> Wallet: Release held funds
+Wallet -> Ledger: Record fund release
+Ledger --> Wallet: Entry recorded
+
+Payment -> Notify: Send failure notification
+Notify --> Customer: SMS and push notification
+
+@enduml
+
+-------------------------
+
+*DATABASE ERD*
+
+@startuml
+
+entity Customer {
+  * customer_id : int <<PK>>
+  --
+  name : string
+  verification_level : string
+  account_status : string
+}
+
+entity Agent {
+  * agent_id : int <<PK>>
+  --
+  name : string
+}
+
+entity Wallet {
+  * wallet_id : int <<PK>>
+  --
+  customer_id : int <<FK>>
+  available_balance : decimal
+  held_balance : decimal
+}
+
+entity LedgerEntry {
+  * entry_id : int <<PK>>
+  --
+  wallet_id : int <<FK>>
+  amount : decimal
+  entry_type : string
+  created_at : datetime
+}
+
+entity Biller {
+  * biller_id : int <<PK>>
+  --
+  name : string
+  protocol : string
+  status : string
+}
+
+entity Service {
+  * service_id : int <<PK>>
+  --
+  biller_id : int <<FK>>
+  name : string
+  status : string
+}
+
+entity Payment {
+  * payment_id : int <<PK>>
+  --
+  customer_id : int <<FK>>
+  service_id : int <<FK>>
+  agent_id : int <<FK>>
+  amount : decimal
+  fee : decimal
+  status : string
+  reference : string
+}
+
+entity Hold {
+  * hold_id : int <<PK>>
+  --
+  payment_id : int <<FK>>
+  wallet_id : int <<FK>>
+  amount : decimal
+  status : string
+}
+
+entity FeeRule {
+  * fee_rule_id : int <<PK>>
+  --
+  service_id : int <<FK>>
+  fee_type : string
+  fee_value : decimal
+}
+
+entity Commission {
+  * commission_id : int <<PK>>
+  --
+  payment_id : int <<FK>>
+  agent_id : int <<FK>>
+  amount : decimal
+}
+
+entity Notification {
+  * notification_id : int <<PK>>
+  --
+  payment_id : int <<FK>>
+  channel : string
+  status : string
+  retry_count : int
+}
+
+entity AuditLog {
+  * audit_id : int <<PK>>
+  --
+  actor_id : int
+  action : string
+  reason : string
+  created_at : datetime
+}
+
+entity RefundRequest {
+  * refund_id : int <<PK>>
+  --
+  payment_id : int <<FK>>
+  customer_id : int <<FK>>
+  status : string
+}
+
+entity SettlementFile {
+  * file_id : int <<PK>>
+  --
+  biller_id : int <<FK>>
+  received_at : datetime
+}
+
+entity ReconciliationDifference {
+  * difference_id : int <<PK>>
+  --
+  file_id : int <<FK>>
+  payment_id : int <<FK>>
+  description : string
+}
+
+Customer ||--|| Wallet
+Customer ||--o{ Payment
+Customer ||--o{ RefundRequest
+Agent ||--o{ Payment
+Agent ||--o{ Commission
+
+Wallet ||--o{ LedgerEntry
+Wallet ||--o{ Hold
+Biller ||--o{ Service
+Service ||--o{ Payment
+Service ||--o{ FeeRule
+
+Payment ||--o{ Hold
+Payment ||--o{ Notification
+Payment ||--o{ Commission
+Payment ||--o{ RefundRequest
+
+Biller ||--o{ SettlementFile
+SettlementFile ||--o{ ReconciliationDifference
+Payment ||--o{ ReconciliationDifference
+
+@enduml
