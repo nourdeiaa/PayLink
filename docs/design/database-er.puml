@@ -1,0 +1,262 @@
+@startuml
+
+title PayLink - Database Entity Relationship Diagram
+
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam linetype ortho
+skinparam roundcorner 10
+
+skinparam entity {
+    BackgroundColor #EAF2F8
+    BorderColor #34495E
+    FontColor #1E293B
+}
+
+' =================================
+' CUSTOMER AND AGENT
+' =================================
+
+entity Customer {
+  * customer_id : int <<PK>>
+  --
+  name : string
+  verification_level : string
+  account_status : string
+}
+
+entity Agent {
+  * agent_id : int <<PK>>
+  --
+  name : string
+  account_status : string
+}
+
+' =================================
+' WALLET AND FINANCIAL RECORDS
+' =================================
+
+entity Wallet {
+  * wallet_id : int <<PK>>
+  --
+  customer_id : int <<FK, nullable>>
+  agent_id : int <<FK, nullable>>
+  currency : string
+  created_at : datetime
+}
+
+entity LedgerEntry {
+  * entry_id : int <<PK>>
+  --
+  wallet_id : int <<FK>>
+  payment_id : int <<FK, nullable>>
+  topup_id : int <<FK, nullable>>
+  amount : decimal
+  entry_type : string
+  created_at : datetime
+}
+
+entity TopUp {
+  * topup_id : int <<PK>>
+  --
+  wallet_id : int <<FK>>
+  amount : decimal
+  payment_method : string
+  status : string
+  created_at : datetime
+}
+
+entity Hold {
+  * hold_id : int <<PK>>
+  --
+  payment_id : int <<FK>>
+  wallet_id : int <<FK>>
+  amount : decimal
+  status : string
+  created_at : datetime
+}
+
+' =================================
+' BILLERS AND SERVICES
+' =================================
+
+entity Biller {
+  * biller_id : int <<PK>>
+  --
+  name : string
+  protocol : string
+  status : string
+}
+
+entity Service {
+  * service_id : int <<PK>>
+  --
+  biller_id : int <<FK>>
+  name : string
+  status : string
+}
+
+entity FeeRule {
+  * fee_rule_id : int <<PK>>
+  --
+  service_id : int <<FK>>
+  fee_type : string
+  fee_value : decimal
+  start_date : datetime
+  end_date : datetime
+}
+
+' =================================
+' PAYMENT PROCESSING
+' =================================
+
+entity Payment {
+  * payment_id : int <<PK>>
+  --
+  customer_id : int <<FK>>
+  service_id : int <<FK>>
+  agent_id : int <<FK, nullable>>
+  idempotency_key : string <<UNIQUE>>
+  reference : string <<UNIQUE>>
+  amount : decimal
+  fee : decimal
+  status : string
+  created_at : datetime
+}
+
+' =================================
+' COMMISSION AND REFUNDS
+' =================================
+
+entity Commission {
+  * commission_id : int <<PK>>
+  --
+  payment_id : int <<FK>>
+  agent_id : int <<FK>>
+  amount : decimal
+  status : string
+}
+
+entity RefundRequest {
+  * refund_id : int <<PK>>
+  --
+  payment_id : int <<FK>>
+  customer_id : int <<FK>>
+  status : string
+  requested_at : datetime
+}
+
+' =================================
+' NOTIFICATIONS AND AUDIT
+' =================================
+
+entity Notification {
+  * notification_id : int <<PK>>
+  --
+  payment_id : int <<FK>>
+  channel : string
+  status : string
+  retry_count : int
+  created_at : datetime
+}
+
+entity AuditLog {
+  * audit_id : int <<PK>>
+  --
+  actor_id : int
+  actor_type : string
+  action : string
+  reason : string
+  created_at : datetime
+}
+
+' =================================
+' RECONCILIATION
+' =================================
+
+entity SettlementFile {
+  * file_id : int <<PK>>
+  --
+  biller_id : int <<FK>>
+  received_at : datetime
+  file_name : string
+}
+
+entity SettlementRecord {
+  * record_id : int <<PK>>
+  --
+  file_id : int <<FK>>
+  biller_reference : string
+  amount : decimal
+  payment_status : string
+}
+
+entity ReconciliationDifference {
+  * difference_id : int <<PK>>
+  --
+  file_id : int <<FK>>
+  record_id : int <<FK>>
+  payment_id : int <<FK, nullable>>
+  description : string
+}
+
+' =================================
+' RELATIONSHIPS
+' =================================
+
+' Customer and Agent wallets
+Customer ||--o| Wallet
+Agent ||--o| Wallet
+
+' Wallet operations
+Wallet ||--o{ LedgerEntry
+Wallet ||--o{ TopUp
+Wallet ||--o{ Hold
+
+' Billers and services
+Biller ||--o{ Service
+Service ||--o{ FeeRule
+Service ||--o{ Payment
+
+' Payment relationships
+Customer ||--o{ Payment
+Agent o|--o{ Payment
+Payment ||--o{ Hold
+Payment ||--o{ LedgerEntry
+Payment ||--o{ Notification
+Payment ||--o| Commission
+Agent ||--o{ Commission
+
+' Refund relationships
+Customer ||--o{ RefundRequest
+Payment ||--o{ RefundRequest
+
+' Top-up ledger records
+TopUp ||--o{ LedgerEntry
+
+' Settlement and reconciliation
+Biller ||--o{ SettlementFile
+SettlementFile ||--o{ SettlementRecord
+SettlementFile ||--o{ ReconciliationDifference
+SettlementRecord ||--o{ ReconciliationDifference
+Payment o|--o{ ReconciliationDifference
+
+note right of Wallet
+  Exactly one owner:
+  Customer OR Agent.
+
+  Balances are derived
+  from ledger entries.
+end note
+
+note right of Payment
+  Idempotency key must
+  be unique.
+
+  Prevents duplicate
+  payment processing.
+end note
+
+@enduml
