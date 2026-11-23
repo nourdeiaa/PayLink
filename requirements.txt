@@ -1,2 +1,6 @@
 fastapi
 uvicorn[standard]
+psycopg[binary]
+pytest
+ruff
+httpx
