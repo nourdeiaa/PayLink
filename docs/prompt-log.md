@@ -131,3 +131,62 @@ Generated a basic Dockerfile and explained how to build and run the FastAPI cont
 *Verdict: ACCEPTED*
 
 Checked that the Dockerfile matched the team's framework, application entry point, and port configuration.
+
+-------------------------------------------------------------------------------------------
+
+## Nour – DevOps
+
+### 7. GitHub Actions CI Workflow
+
+*Date:* 2026-11-23  
+*Stage:* DevOps  
+*Tool and Model:* ChatGPT — GPT-6
+
+*Prompt:*
+
+> Act as a DevOps engineer. Our PayLink project uses Python FastAPI. Create a GitHub Actions workflow saved at .github/workflows/ci.yml. It must run on every push, check out the repository, set up Python, install dependencies, run linting, and execute at least one automated test. Explain all required files and commands. Do not include deployment steps.
+
+*Summary of AI Answer:*
+
+Generated a CI workflow that installs dependencies, runs linting, and executes tests on pushes.
+
+*Verdict: FIXED*
+
+Adjusted the workflow commands and file paths to match the actual repository structure.
+
+---
+
+## Nour – DevOps
+
+### 8. Docker Compose Setup
+
+*Date:* 2026-11-23  
+*Stage:* DevOps  
+*Tool and Model:* ChatGPT — GPT-6
+
+*Prompt:*
+
+> Act as a DevOps engineer. Our PayLink project uses Python FastAPI and PostgreSQL. Create a Docker Compose configuration that runs both the FastAPI application and PostgreSQL database. Configure the application to wait until the database is healthy before starting. Include port mappings, environment variables, a persistent database volume, and a database health check. Also provide the required Dockerfile and explain how to build, start, stop, and test the containers. Keep the setup simple and suitable for Phase 1. Do not implement application features or database migrations.
+
+*Summary of AI Answer:*
+
+Generated a Docker Compose configuration for the FastAPI application and PostgreSQL database, including service dependencies, environment variables, persistent storage, and health checks.
+
+*Verdict: FIXED*
+
+Reviewed the configuration and adjusted the service settings, application paths, and database connection details to match the actual PayLink repository structure.
+
+---
+
+## Summary
+
+| Student | Stage       | Activities                  | Final Verdicts      |
+
+| Mariam | Requirements | User stories and edge cases | 1 Accepted, 1 Fixed |
+| Aya    | Design       | Class and sequence diagrams | 2 Fixed, 1 Rejected |
+| Aya    | DevOps       | Dockerfile                  | 1 Accepted          |
+| Nour   | DevOps       | GitHub Actions CI           | 2 Fixed             |
+
+*Total AI interactions:* 8
+
+*Overall observation:* AI assistance was used across Requirements, Design, and DevOps. Generated outputs were reviewed against the project brief and actual implementation needs. Some outputs were accepted directly, while others required corrections or rejection when they did not fully satisfy the project requirements.
