@@ -1,46 +1,40 @@
 @startuml
-title PayLink - Refund Sequence Diagram
+title PayLink - Refund a Failed Payment Sequence Diagram
 
 autonumber
 
-actor Customer
+participant "Payment Processing" as Pay
+participant "Biller Integration" as Adapter
+participant "Accounts and Wallet" as Wallet
+participant "Notifications" as Notif
+participant "Reconciliation" as Recon
 actor "Support Employee" as Support
 
-participant "Mobile App" as App
-participant "Refund Service" as Refund
-participant "Payment Service" as Payment
-participant "Wallet Service" as Wallet
+note over Pay
+  Payment is Failed: the biller refused, or a payment
+  that was Unknown is confirmed as not received.
+end note
 
-Customer -> App: Request refund
-App -> Refund: Submit request
-
-Refund -> Payment: Check payment eligibility
-
-alt Payment not eligible
-    Payment --> Refund: Not eligible
-    Refund --> App: Reject request
-
-else Payment eligible
-    Payment --> Refund: Eligible
-    Refund -> Refund: Create refund request (PENDING)
-
-    Support -> Refund: Review request
-
-    alt Refund rejected
-        Refund -> Refund: Status = REJECTED
-        Refund --> App: Refund rejected
-
-    else Refund approved
-        Refund -> Refund: Status = APPROVED
-        Refund -> Payment: Set REFUND_PENDING
-        Refund -> Wallet: Credit refund amount
-        Wallet --> Refund: Credit successful
-        Refund -> Refund: Status = PROCESSED
-        Refund -> Payment: Set REFUNDED
-        Refund --> App: Refund successful
-    end
+alt Biller refuses (from SentToBiller)
+    Adapter --> Pay: Refused
+else Unknown resolved as not received
+    Recon --> Pay: Biller has no record of this payment
+    note right of Recon
+      Unknown is never refunded
+      until the biller is known
+      not to have received it.
+    end note
 end
 
-App --> Customer: Display refund status
+Pay -> Pay: Status = Failed
+Pay -> Wallet: Release hold (held -> available)
+Wallet -> Wallet: Create ledger entry (hold release)
+Wallet --> Pay: Hold released
+Pay -> Pay: Status = Refunded (final)
+Pay -> Notif: Send SMS + push (failed, money returned)
+
+opt Reconciliation difference needs review
+    Recon -> Support: Flag difference in report
+end
 
 @enduml
