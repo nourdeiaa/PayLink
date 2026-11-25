@@ -1,102 +1,46 @@
 @startuml
+title PayLink - Refund Sequence Diagram
 
-title PayLink - Payment Lifecycle State Diagram
+autonumber
 
-' ==============================
-' DIAGRAM STYLE
-' ==============================
+actor Customer
+actor "Support Employee" as Support
 
-left to right direction
+participant "Mobile App" as App
+participant "Refund Service" as Refund
+participant "Payment Service" as Payment
+participant "Wallet Service" as Wallet
 
-skinparam backgroundColor white
-skinparam shadowing false
-skinparam roundcorner 15
-skinparam linetype ortho
-skinparam ArrowColor #475569
-skinparam ArrowThickness 1.3
-skinparam state {
-    FontName Arial
-    FontSize 13
-    FontColor #1E293B
-    BorderColor #475569
-    BackgroundColor #F1F5F9
-}
+Customer -> App: Request refund
+App -> Refund: Submit request
 
-' ==============================
-' PAYMENT STATES
-' ==============================
+Refund -> Payment: Check payment eligibility
 
-state Initiated #DBEAFE
-state FundsHeld #FEF3C7
-state SentToBiller #FEF3C7
-state Unknown #FDE68A
+alt Payment not eligible
+    Payment --> Refund: Not eligible
+    Refund --> App: Reject request
 
-state Completed #BBF7D0
-state Rejected #FECACA
-state Failed #FECACA
-state Refunded #E9D5FF
+else Payment eligible
+    Payment --> Refund: Eligible
+    Refund -> Refund: Create refund request (PENDING)
 
-' ==============================
-' INITIAL STATE
-' ==============================
+    Support -> Refund: Review request
 
-[*] --> Initiated
+    alt Refund rejected
+        Refund -> Refund: Status = REJECTED
+        Refund --> App: Refund rejected
 
-' ==============================
-' VALIDATION
-' ==============================
+    else Refund approved
+        Refund -> Refund: Status = APPROVED
+        Refund -> Payment: Set REFUND_PENDING
+        Refund -> Wallet: Credit refund amount
+        Wallet --> Refund: Credit successful
+        Refund -> Refund: Status = PROCESSED
+        Refund -> Payment: Set REFUNDED
+        Refund --> App: Refund successful
+    end
+end
 
-Initiated --> FundsHeld : Fraud checks pass\nand sufficient funds available
-
-Initiated --> Rejected : Fraud checks fail\nor insufficient funds
-
-' ==============================
-' BILLER PROCESSING
-' ==============================
-
-FundsHeld --> SentToBiller : Payment request sent
-
-SentToBiller --> Completed : Biller confirms
-SentToBiller --> Failed : Biller refuses
-SentToBiller --> Unknown : Timeout (10 seconds)
-
-' ==============================
-' UNKNOWN PAYMENT RESOLUTION
-' ==============================
-
-Unknown --> Completed : Later confirmation
-Unknown --> Failed : Later refusal or\nreconciliation confirms no payment
-
-' ==============================
-' REFUND
-' ==============================
-
-Failed --> Refunded : Hold released\nto customer wallet
-
-' ==============================
-' FINAL STATES
-' ==============================
-
-Completed --> [*]
-Rejected --> [*]
-Refunded --> [*]
-
-' ==============================
-' IMPORTANT BUSINESS RULE
-' ==============================
-
-note right of Unknown
-  Payment remains pending.
-  Funds remain held.
-
-  No automatic refund is allowed
-  until the biller's final result
-  is confirmed.
-end note
-
-note bottom of Refunded
-  Completed, Rejected and Refunded
-  are final payment states.
-end note
+App --> Customer: Display refund status
 
 @enduml
