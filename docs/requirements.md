@@ -19,14 +19,15 @@ PayLink is an Egyptian digital payment platform that allows customers to pay ele
 ## 3. Functional Requirements
 
 FR-1 — Customer registration (Must)
+
 As a customer, I want to register an account so that I can use PayLink.
 
-- Given a new customer has valid registration information,
-- When they submit the registration,
-- Then the system creates their account with basic verification level.
+- Given a user provides valid registration information (name, phone number, and password), When they register, Then a basic account is created.
+- Given required information is missing or invalid, When they register, Then the system rejects the request.
 ------------------------------------
 
 FR-2 — Upgrade verification (Should)
+
 As a customer, I want to upgrade my verification level so that I can have higher payment limits.
 
 - Given a customer has a basic account,
@@ -35,6 +36,7 @@ As a customer, I want to upgrade my verification level so that I can have higher
 ------------------------------------
 
 FR-3 — View wallet (Must)
+
 As a customer, I want to view my wallet balance and transaction history so that I can track my money.
 
 - Given a customer is logged in,
@@ -43,6 +45,7 @@ As a customer, I want to view my wallet balance and transaction history so that 
 ------------------------------------
 
 FR-4 — Top up wallet (Must)
+
 As a customer, I want to add money to my wallet so that I can pay bills.
 
 - Given a customer has a valid wallet,
@@ -51,14 +54,15 @@ As a customer, I want to add money to my wallet so that I can pay bills.
 ------------------------------------
 
 FR-5 — Ledger entries (Must)
-As a system administrator, I want every balance change recorded in a ledger so that all money movements can be tracked.
 
-- Given a wallet balance changes,
-- When the transaction is recorded,
-- Then the system creates a ledger entry and computes the balance from ledger entries.
+As a system, I want every wallet balance change to be recorded in the ledger, so that wallet balances remain accurate and traceable.
+
+- Given a wallet transaction occurs, When the transaction is completed, Then a ledger entry is automatically created.
+- Given a ledger entry exists, When the wallet balance is calculated, Then it is calculated using all ledger entries.
 ------------------------------------
 
 FR-6 — Manage billers (Must)
+
 As an admin, I want to add, edit and disable billers and services so that the available services stay up to date.
 
 - Given an admin is authorized,
@@ -67,6 +71,7 @@ As an admin, I want to add, edit and disable billers and services so that the av
 ------------------------------------
 
 FR-7 — View billers (Must)
+
 As a customer, I want to see available billers and their required input fields so that I know what information to enter.
 
 - Given a customer opens the biller list,
@@ -75,6 +80,7 @@ As a customer, I want to see available billers and their required input fields s
 ------------------------------------
 
 FR-8 — Bill inquiry (Must)
+
 As a customer, I want to inquire about my bill so that I can see the amount and fees before paying.
 
 - Given a customer selects a biller and enters the required information,
@@ -83,6 +89,7 @@ As a customer, I want to inquire about my bill so that I can see the amount and 
 ------------------------------------
 
 FR-9 — Pay bill (Must)
+
 As a customer, I want to pay a bill from my wallet so that I can complete the payment without visiting the biller's office.
 
 - Given the customer has sufficient available wallet funds,
@@ -90,7 +97,7 @@ As a customer, I want to pay a bill from my wallet so that I can complete the pa
 - Then the system begins the payment process and follows the defined payment lifecycle.
 ------------------------------------
 
-FR-10 — Idempotency
+FR-10 — Idempotency (Must)
 
 As a customer, I want repeated payment requests with the same idempotency key to return the original result, so that I am not charged twice.
 
@@ -99,16 +106,19 @@ As a customer, I want repeated payment requests with the same idempotency key to
 - Given the same key is sent multiple times, when the requests are processed, then only one charge is made.
 ------------------------------------
 
-FR-11 — Payment lifecycle
+FR-11 — Payment lifecycle (Must)
 
 As a system, I want every payment to follow the defined payment lifecycle, so that payment status changes remain correct.
 
-- Given a payment is Initiated and fraud checks pass with sufficient funds, when processing continues, then it becomes FundsHeld.
-- Given a payment is SentToBiller, when the biller confirms payment, then it becomes Completed.
-- Given a payment is Completed, when another status change is attempted, then the system rejects the invalid transition.
+- Initiated → FundsHeld or Rejected (based on fraud checks and wallet balance).
+- FundsHeld → SentToBiller.
+- SentToBiller → Completed, Failed, or Unknown.
+- Unknown → Completed or Failed.
+- Failed → Refunded.
+- Completed, Rejected, and Refunded are final states.
 ------------------------------------
 
-FR-12 — Hold funds before calling the biller
+FR-12 — Hold funds before calling the biller (Must)
 
 As a customer, I want the payment amount to be held before PayLink contacts the biller, so that my wallet cannot spend the same money twice.
 
@@ -117,7 +127,7 @@ As a customer, I want the payment amount to be held before PayLink contacts the 
 - Given the biller refuses the payment, when the failure is confirmed, then the held funds are released.
 ------------------------------------
 
-FR-13 — Handle payment timeouts
+FR-13 — Handle payment timeouts (Must)
 
 As a customer, I want a timed-out payment to be marked Unknown, so that I am not refunded when the biller may have received my payment.
 
@@ -126,16 +136,16 @@ As a customer, I want a timed-out payment to be marked Unknown, so that I am not
 - Given the payment remains Unknown after three retries, when retrying stops, then it waits for reconciliation.
 ------------------------------------
 
-FR-14 — TopUpNet callbacks
+FR-14 — TopUpNet callbacks (Must)
 
 As a system, I want to receive asynchronous callbacks from TopUpNet and ignore duplicates, so that a mobile top-up is processed only once.
 
-- Given a TopUpNet payment request, when TopUpNet accepts it, then PayLink waits for the final callback.
-- Given a valid success callback, when PayLink receives it, then the payment is completed.
-- Given the same callback arrives twice, when the second callback is received, then it is ignored and logged.
+- Given a payment is awaiting a callback, When TopUpNet sends success, Then the payment becomes Completed.
+- Given TopUpNet sends failed, Then the payment becomes Failed.
+- Given a callback is received more than once, Then duplicate callbacks are ignored and logged.
 ------------------------------------
 
-FR-15 — Support at least three billers
+FR-15 — Support at least three billers (Must)
 
 As a customer, I want to pay through different billers, so that I can use PayLink for electricity, water, and mobile top-up payments.
 
@@ -144,7 +154,7 @@ As a customer, I want to pay through different billers, so that I can use PayLin
 - Given a customer wants a mobile top-up, when they select TopUpNet, then PayLink handles its asynchronous callback process.
 ------------------------------------
 
-FR-16 — Calculate fees correctly
+FR-16 — Calculate fees correctly (Must)
 
 As a customer, I want PayLink to calculate the correct service fee, so that I know the total amount before paying.
 
@@ -154,7 +164,7 @@ As a customer, I want PayLink to calculate the correct service fee, so that I kn
 - Given a valid promotion is active for a chosen biller, when its fee is calculated, then the fee is zero.
 ------------------------------------
 
-FR-17 — Agent pays on behalf of a customer
+FR-17 — Agent pays on behalf of a customer (Should)
 
 As an agent, I want to pay a bill on behalf of a customer, so that the customer can use PayLink without using the mobile app.
 
@@ -163,7 +173,7 @@ As an agent, I want to pay a bill on behalf of a customer, so that the customer 
 - Given the payment fails, when the failure is confirmed, then the agent does not receive commission.
 ------------------------------------
 
-FR-18 — Payment limits
+FR-18 — Payment limits (Must)
 
 As a customer, I want PayLink to check my payment limits, so that I cannot make payments above my allowed limit.
 
@@ -176,6 +186,7 @@ As a customer, I want PayLink to check my payment limits, so that I cannot make 
 FR-19 — Payment velocity rule (Should)
 
 As a system, I want to block accounts that make too many payments in a short time so that suspicious activity is prevented.
+
 - Given an account makes more than 5 payments within 60 seconds,
 - When the sixth or later payment is attempted,
 - Then the account is blocked for 10 minutes.
@@ -184,6 +195,7 @@ As a system, I want to block accounts that make too many payments in a short tim
 FR-20 — Search payment (Must)
 
 As a support employee, I want to search for a payment by its reference so that I can investigate its history.
+
 - Given a support employee has permission to access payment records,
 - When they search using a payment reference,
 - Then the system displays the payment's full history.
@@ -192,6 +204,7 @@ As a support employee, I want to search for a payment by its reference so that I
 FR-21 — Block and unblock accounts (Should)
 
 As a support employee, I want to block and unblock customer accounts so that I can manage suspicious or problematic accounts.
+
 - Given a support employee is authorized,
 - When they block or unblock an account,
 - Then the system updates the account status and records the action.
@@ -200,6 +213,7 @@ As a support employee, I want to block and unblock customer accounts so that I c
 FR-22 — Notifications (Must)
 
 As a customer, I want to receive SMS and push notifications when a payment succeeds or fails so that I know its result.
+
 - Given a payment is completed or failed,
 - When the payment status changes,
 - Then the system sends an SMS and push notification to the customer.
@@ -208,6 +222,7 @@ As a customer, I want to receive SMS and push notifications when a payment succe
 FR-23 — Notification retries (Should)
 
 As a system, I want to retry failed notifications so that temporary provider failures do not prevent customers from receiving updates.
+
 - Given an SMS or email notification fails,
 - When the system retries delivery,
 - Then it retries 3 times and marks the notification as undelivered if all attempts fail.
@@ -216,6 +231,7 @@ As a system, I want to retry failed notifications so that temporary provider fai
 FR-24 — Edit fees and limits (Should)
 
 As an admin, I want to edit fee and limit values without redeploying the application so that business rules can be updated easily.
+
 - Given an admin is authorized,
 - When they update a fee or limit,
 - Then the system saves the new configuration without requiring redeployment.
@@ -224,6 +240,7 @@ As an admin, I want to edit fee and limit values without redeploying the applica
 FR-25 — Audit log (Must)
 
 As a system administrator, I want every money movement and admin action recorded so that activities can be traced.
+
 - Given a money movement or admin action occurs,
 - When the action is performed,
 - Then the system records it in an audit log.
@@ -232,6 +249,7 @@ As a system administrator, I want every money movement and admin action recorded
 FR-26 — Reconciliation report (Should)
 
 As a support employee, I want a daily reconciliation report so that I can identify differences between PayLink payments and biller settlement files.
+
 - Given a settlement file is received,
 - When the reconciliation process runs,
 - Then the system compares the file with PayLink's payment records and produces a report of differences.
@@ -240,6 +258,7 @@ As a support employee, I want a daily reconciliation report so that I can identi
 FR-27 — Request refund (Could)
 
 As a customer, I want to request a refund for a completed payment so that support can review my refund request.
+
 - Given a customer has a completed payment,
 - When they submit a refund request,
 - Then the system records the request for support approval.
@@ -248,6 +267,7 @@ As a customer, I want to request a refund for a completed payment so that suppor
 FR-28 — Daily totals (Could)
 
 As an admin, I want to view daily payment statistics so that I can monitor business performance.
+
 - Given daily payment data is available,
 - When the admin opens the daily totals report,
 - Then the system displays payments, fees earned, commissions paid and failures per biller.
@@ -282,11 +302,13 @@ NFR-4 — Testability
 ------------------------------------
 
 NFR-5 — Resilience
+
 - Requirement: An outage of one biller must not stop payments to other billers.
 - Measurement: Test that payments to an available biller still work while another mock biller is unavailable.
 ------------------------------------
 
 NFR-6 — Auditability
+
 - Requirement: Every money movement must have an audit record containing who, when and why.
 - Measurement: 100% of money movements have the required audit record.
 ------------------------------------
@@ -294,16 +316,16 @@ NFR-6 — Auditability
 
 ## 5. Questions, Ambiguities and Decisions
 
-| Question or ambiguity                                  | Decision
-|------------------------------------------------------  | --------------- 
-| What is the daily payment limit for basic accounts?    | 5,000 EGP 
-| What is the daily payment limit for verified accounts? | 30,000 EGP 
-| What is the minimum single payment?                    | 5 EGP 
-| What is the maximum single payment?                    | 10,000 EGP 
-| Should wallet balances be changed directly?            | No. Every money movement must create a ledger entry. 
-| What balances should customers see?                    | Available balance and held balance. 
-| What happens when a bill inquiry is made?              | Display bill amount, fee and total before payment.
-|
+| Question or ambiguity                                         | Decision
+|------------------------------------------------------         | --------------- 
+| What is the daily payment limit for basic accounts?           | 5,000 EGP 
+| What is the daily payment limit for verified accounts?        | 30,000 EGP 
+| What is the minimum single payment?                           | 5 EGP 
+| What is the maximum single payment?                           | 10,000 EGP 
+| Should wallet balances be changed directly?                   | No. Every money movement must create a ledger entry. 
+| What balances should customers see?                           | Available balance and held balance. 
+| What happens when a bill inquiry is made?                     | Display bill amount, fee and total before payment.
+| What happens if the biller doesn't respond within 10 seconds? | Payment becomes Unknown, and the system retries after 1, 5, and 15 minutes.
 ------------------------------------
 
 
