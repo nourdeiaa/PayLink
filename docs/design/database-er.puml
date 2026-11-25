@@ -23,8 +23,11 @@ entity Customer {
   * customer_id : int <<PK>>
   --
   name : string
+  phone : string <<UNIQUE>>
+  password_hash : string
   verification_level : string
   account_status : string
+  blocked_until : datetime <<nullable>>
 }
 
 entity Agent {
@@ -41,6 +44,7 @@ entity Agent {
 entity Wallet {
   * wallet_id : int <<PK>>
   --
+  owner_type : string
   customer_id : int <<FK, nullable>>
   agent_id : int <<FK, nullable>>
   currency : string
@@ -95,7 +99,17 @@ entity Service {
   --
   biller_id : int <<FK>>
   name : string
+  min_amount : decimal
+  max_amount : decimal
   status : string
+}
+
+entity ServiceField {
+  * field_id : int <<PK>>
+  --
+  service_id : int <<FK>>
+  field_name : string
+  is_required : boolean
 }
 
 entity FeeRule {
@@ -104,8 +118,11 @@ entity FeeRule {
   service_id : int <<FK>>
   fee_type : string
   fee_value : decimal
-  start_date : datetime
-  end_date : datetime
+  min_fee : decimal <<nullable>>
+  tier_threshold : decimal <<nullable>>
+  is_promotion : boolean
+  start_date : datetime <<nullable>>
+  end_date : datetime <<nullable>>
 }
 
 ' =================================
@@ -120,10 +137,39 @@ entity Payment {
   agent_id : int <<FK, nullable>>
   idempotency_key : string <<UNIQUE>>
   reference : string <<UNIQUE>>
+  biller_reference : string <<nullable>>
   amount : decimal
   fee : decimal
   status : string
   created_at : datetime
+}
+
+entity PaymentEvent {
+  * event_id : int <<PK>>
+  --
+  payment_id : int <<FK>>
+  from_status : string
+  to_status : string
+  reason : string
+  created_at : datetime
+}
+
+entity BillerCallback {
+  * callback_id : int <<PK>>
+  --
+  payment_id : int <<FK>>
+  biller_reference : string
+  result : string
+  is_duplicate : boolean
+  received_at : datetime
+}
+
+entity SystemConfig {
+  * config_key : string <<PK>>
+  --
+  config_value : string
+  updated_by : int
+  updated_at : datetime
 }
 
 ' =================================
@@ -169,6 +215,9 @@ entity AuditLog {
   actor_type : string
   action : string
   reason : string
+  wallet_id : int <<FK, nullable>>
+  payment_id : int <<FK, nullable>>
+  amount : decimal <<nullable>>
   created_at : datetime
 }
 
@@ -218,11 +267,14 @@ Wallet ||--o{ Hold
 ' Billers and services
 Biller ||--o{ Service
 Service ||--o{ FeeRule
+Service ||--o{ ServiceField
 Service ||--o{ Payment
 
 ' Payment relationships
 Customer ||--o{ Payment
-Agent o|--o{ Payment
+Agent |o--o{ Payment
+Payment ||--o{ PaymentEvent
+Payment ||--o{ BillerCallback
 Payment ||--o{ Hold
 Payment ||--o{ LedgerEntry
 Payment ||--o{ Notification
@@ -241,11 +293,13 @@ Biller ||--o{ SettlementFile
 SettlementFile ||--o{ SettlementRecord
 SettlementFile ||--o{ ReconciliationDifference
 SettlementRecord ||--o{ ReconciliationDifference
-Payment o|--o{ ReconciliationDifference
+Payment |o--o{ ReconciliationDifference
 
 note right of Wallet
   Exactly one owner:
-  Customer OR Agent.
+  Customer, Agent or PayLink
+  (owner_type = PAYLINK holds
+  fee income).
 
   Balances are derived
   from ledger entries.
