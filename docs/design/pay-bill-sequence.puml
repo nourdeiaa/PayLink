@@ -5,43 +5,81 @@ autonumber
 
 actor Customer
 participant "Mobile App" as App
-participant "Payment Service" as Payment
-participant "Wallet Service" as Wallet
-participant "Biller" as Biller
+participant "Payment Processing" as Pay
+participant "Biller Catalog" as Catalog
+participant "Biller Integration\n(Adapter)" as Adapter
+participant "Fees and\nCommissions" as Fees
+participant "Fraud Checks" as Fraud
+participant "Accounts and Wallet" as Wallet
+participant "External Biller" as Biller
+participant "Notifications" as Notif
 
-Customer -> App: Pay bill
-App -> Payment: Submit payment
+Customer -> App: Enter meter / phone number
+App -> Pay: Bill inquiry
+Pay -> Catalog: Get service and required fields
+Pay -> Adapter: Inquire bill
+Adapter -> Biller: Inquiry request
+Biller --> Adapter: Bill amount
+Adapter --> Pay: Bill amount
+Pay -> Fees: Calculate service fee
+Fees --> Pay: Fee
+Pay --> App: Amount + fee = total
+Customer -> App: Confirm payment (idempotency key)
+App -> Pay: Submit payment
 
-Payment -> Payment: Validate request
-Payment -> Wallet: Hold amount
+alt Idempotency key already used
+    Pay --> App: Return original result
+else New request
+    Pay -> Pay: Create payment (Initiated)
+    Pay -> Fraud: Check daily limit, velocity, blocked account
+    Fraud --> Pay: Result
 
-alt Insufficient balance
-    Wallet --> Payment: Hold rejected
-    Payment -> Payment: Status = REJECTED
-    Payment --> App: Payment rejected
+    alt Fraud check fails
+        Pay -> Pay: Status = Rejected
+        Pay --> App: Payment rejected (reason)
+    else Fraud checks pass
+        Pay -> Wallet: Hold total (available -> held)
 
-else Balance available
-    Wallet --> Payment: Funds held
-    Payment -> Payment: Status = PROCESSING
+        alt Insufficient funds
+            Wallet --> Pay: Hold rejected
+            Pay -> Pay: Status = Rejected
+            Pay --> App: Payment rejected (reason)
+        else Funds held
+            Wallet --> Pay: Funds held
+            Pay -> Pay: Status = FundsHeld
+            Pay -> Adapter: Send payment (unique reference)
+            Pay -> Pay: Status = SentToBiller
+            Adapter -> Biller: Payment request
 
-    Payment -> Biller: Process bill payment
-
-    alt Payment successful
-        Biller --> Payment: Success
-        Payment -> Wallet: Capture held funds
-        Payment -> Payment: Status = SUCCESS
-        Payment --> App: Payment successful
-
-    else Payment failed
-        Biller --> Payment: Failure
-        Payment -> Wallet: Release held funds
-        Payment -> Payment: Status = FAILED
-        Payment --> App: Payment failed
-
-    else Timeout
-        Biller --> Payment: No confirmed result
-        Payment -> Payment: Status = UNKNOWN
-        Payment --> App: Payment pending verification
+            alt Biller confirms
+                Biller --> Adapter: Paid
+                Adapter --> Pay: Success
+                Pay -> Wallet: Convert hold to final charge, credit fee income
+                opt Paid by an agent
+                    Pay -> Fees: Calculate agent commission (40% of fee)
+                    Pay -> Wallet: Credit commission to agent wallet
+                end
+                Pay -> Pay: Status = Completed
+                Pay -> Notif: Send SMS + push (success)
+            else Biller refuses
+                Biller --> Adapter: Refused (error code)
+                Adapter --> Pay: Failure
+                Pay -> Pay: Status = Failed
+                Pay -> Wallet: Release hold
+                Pay -> Pay: Status = Refunded
+                Pay -> Notif: Send SMS + push (failure reason)
+            else No answer within 10 seconds
+                Adapter --> Pay: Timeout
+                Pay -> Pay: Status = Unknown
+                note right of Pay
+                  Funds stay held.
+                  Never refunded automatically.
+                  Re-query after 1, 5, 15 min,
+                  then wait for reconciliation.
+                end note
+            end
+            Pay --> App: Payment status
+        end
     end
 end
 
