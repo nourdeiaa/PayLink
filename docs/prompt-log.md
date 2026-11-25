@@ -1,192 +1,26 @@
-# PayLink – AI Prompt Log
-
-*Project:* PayLink – Egyptian Bill Payment and Digital Wallet Backend  
-*Date:* 23 November 2026  
-*AI Tool Used:* ChatGPT — GPT-6
-
----
-
-## Mariam – Requirements
-
-### 1. User Stories and Acceptance Criteria
-
-*Date:* 2026-11-23  
-*Stage:* Requirements  
-*Tool and Model:* ChatGPT — GPT-6
-
-*Prompt:*
-
-> Act as a business analyst. For PayLink, an Egyptian bill-payment and digital-wallet backend, create 28 user stories about registering customers, viewing wallet balances, topping up wallets, and paying bills. Use the format "As a [user], I want [goal], so that [benefit]." Give each story a Must, Should, or Could priority and write acceptance criteria in Given/When/Then format. Follow the project brief and do not invent business rules.
-
-*Summary of AI Answer:*
-
-Generated 28 user stories with priorities and Given/When/Then acceptance criteria.
-
-*Verdict: ACCEPTED*
-
-The generated stories were checked against the project brief and matched the stated requirements.
-
----
-
-### 2. Requirements Edge Cases
-
-*Date:* 2026-11-23  
-*Stage:* Requirements  
-*Tool and Model:* ChatGPT — GPT-6
-
-*Prompt:*
-
-> Act as a requirements reviewer. Review PayLink's requirements and identify 5 important edge cases involving duplicate payment requests, simultaneous wallet payments, biller timeouts, duplicate callbacks, and notification failures. Explain the expected behaviour for each case. Use only the project brief and label unspecified behaviour as a question for the team.
-
-*Summary of AI Answer:*
-
-Identified important edge cases and explained the expected system behaviour for each one.
-
-*Verdict: FIXED*
-
-Removed assumptions that were not supported by the project brief and discussed unclear cases with the team.
-
-
--------------------------------------------------------------------------------------------
-
-
-## Aya – Design
-
-### 3. Domain Class Diagram
-
-*Date:* 2026-11-23  
-*Stage:* Design  
-*Tool and Model:* ChatGPT — GPT-6
-
-*Prompt:*
-
-> Act as a UML designer. Create a PlantUML domain class diagram for PayLink containing Customer, Wallet, LedgerEntry, Payment, Biller, Service, FeeRule, and Agent. Include important attributes, relationships, and multiplicities. Every wallet balance change must be represented by ledger entries. Provide the complete editable PlantUML source and explain each class.
-
-*Summary of AI Answer:*
-
-Generated a domain class diagram containing the main entities, attributes, and relationships.
-
-*Verdict: FIXED*
-
-Reviewed the relationships and ensured that the wallet and ledger classes correctly represented money movements.
-
----
-
-### 4. Initial Payment Sequence Diagram
-
-*Date:* 2026-11-23  
-*Stage:* Design  
-*Tool and Model:* ChatGPT — GPT-6
-
-*Prompt:*
-
-> Create a PlantUML sequence diagram for a customer paying a bill in PayLink. Include the customer, application, wallet, and biller. Show successful and failed payments.
-
-*Summary of AI Answer:*
-
-Generated a basic sequence diagram showing the main payment flow, but some important failure-handling details were missing.
-
-*Verdict: REJECTED*
-
-The first answer did not include all required payment outcomes and did not explain what happens to held funds.
-
----
-
-### 5. Improved Payment Sequence Diagram
-
-*Date:* 2026-11-23  
-*Stage:* Design  
-*Tool and Model:* ChatGPT — GPT-6
-
-*Prompt:*
-
-> Improve the previous PayLink payment sequence diagram. Include Customer, PayLink API, Payment Service, Fraud Check, Wallet/Ledger Service, Fee Service, Biller Adapter, External Biller, and Notification Service. Show fraud checks, fee calculation, holding funds before calling the biller, and three outcomes: success, refusal, and timeout after 10 seconds. Success must lead to Completed; refusal must lead to Failed and release the hold; timeout must lead to Unknown while funds remain held. Use PlantUML with alt/else blocks. Do not invent state transitions or automatically refund Unknown payments.
-
-*Summary of AI Answer:*
-
-Generated a more complete sequence diagram with the required participants and three biller outcomes.
-
-*Verdict: FIXED*
-
-The improved prompt produced a clearer diagram and included the held funds and Unknown state that were missing from the previous version.
-
----
-
-## Aya – DevOps
-
-### 6. Dockerfile for FastAPI
-
-*Date:* 2026-11-23  
-*Stage:* DevOps  
-*Tool and Model:* ChatGPT — GPT-6
-
-*Prompt:*
-
-> Act as a DevOps engineer. Our PayLink team selected Python FastAPI. Create a simple Dockerfile for an empty FastAPI application. Use Python 3, install dependencies from requirements.txt, start the application using Uvicorn, and expose port 8000. Do not include a database in the Dockerfile. Explain every instruction and provide the commands to build and run the container.
-
-*Summary of AI Answer:*
-
-Generated a basic Dockerfile and explained how to build and run the FastAPI container.
-
-*Verdict: ACCEPTED*
-
-Checked that the Dockerfile matched the team's framework, application entry point, and port configuration.
-
--------------------------------------------------------------------------------------------
-
-## Nour – DevOps
-
-### 7. GitHub Actions CI Workflow
-
-*Date:* 2026-11-23  
-*Stage:* DevOps  
-*Tool and Model:* ChatGPT — GPT-6
-
-*Prompt:*
-
-> Act as a DevOps engineer. Our PayLink project uses Python FastAPI. Create a GitHub Actions workflow saved at .github/workflows/ci.yml. It must run on every push, check out the repository, set up Python, install dependencies, run linting, and execute at least one automated test. Explain all required files and commands. Do not include deployment steps.
-
-*Summary of AI Answer:*
-
-Generated a CI workflow that installs dependencies, runs linting, and executes tests on pushes.
-
-*Verdict: FIXED*
-
-Adjusted the workflow commands and file paths to match the actual repository structure.
-
----
-
-## Nour – DevOps
-
-### 8. Docker Compose Setup
-
-*Date:* 2026-11-23  
-*Stage:* DevOps  
-*Tool and Model:* ChatGPT — GPT-6
-
-*Prompt:*
-
-> Act as a DevOps engineer. Our PayLink project uses Python FastAPI and PostgreSQL. Create a Docker Compose configuration that runs both the FastAPI application and PostgreSQL database. Configure the application to wait until the database is healthy before starting. Include port mappings, environment variables, a persistent database volume, and a database health check. Also provide the required Dockerfile and explain how to build, start, stop, and test the containers. Keep the setup simple and suitable for Phase 1. Do not implement application features or database migrations.
-
-*Summary of AI Answer:*
-
-Generated a Docker Compose configuration for the FastAPI application and PostgreSQL database, including service dependencies, environment variables, persistent storage, and health checks.
-
-*Verdict: FIXED*
-
-Reviewed the configuration and adjusted the service settings, application paths, and database connection details to match the actual PayLink repository structure.
-
----
+# PayLink -- AI Prompt Log
+
+*Project:* PayLink -- Egyptian Bill-Payment and Digital-Wallet
+
+| Date | Author | Stage | Tool and model | Prompt | Summary of answer (2 lines) | Verdict (accepted, fixed, rejected) and why |
+|---|---|---|---|---|---|---|
+| 2026-11-23 | Mariam | Requirements | ChatGPT (GPT-6) | **ROLE:** Act as a business analyst.<br><br>**CONTEXT:** PayLink is an Egyptian bill-payment and digital-wallet backend.<br><br>**TASK:** Create 28 user stories for customer registration, wallet viewing, top-ups and bill payments. Use "As a \[user\], I want \[goal\], so that \[benefit\]."<br><br>**CONSTRAINTS:** Assign Must, Should or Could priority. Follow the project brief and do not invent business rules.<br><br>**OUTPUT:** User stories with Given/When/Then acceptance criteria. | Generated 28 user stories with priorities and acceptance criteria. The stories were checked against the project brief. | **ACCEPTED.** The stories matched the requirements stated in the project brief. |
+| 2026-11-23 | Mariam | Requirements | ChatGPT (GPT-6) | **ROLE:** Act as a requirements reviewer.<br><br>**CONTEXT:** PayLink is a bill-payment and wallet backend.<br><br>**TASK:** Identify edge cases involving duplicate payment requests, simultaneous wallet payments, biller timeouts, duplicate callbacks and notification failures.<br><br>**CONSTRAINTS:** Use only the project brief. Mark unspecified behavior as a question for the team.<br><br>**OUTPUT:** Explain the expected behavior for each case. | Identified important payment and notification edge cases. The initial answer included assumptions that needed to be checked. | **FIXED.** Removed unsupported assumptions and discussed unclear behavior with the team. The revised prompt was prepared but not re-run. |
+| 2026-11-23 | Aya | Design | Claude Sonnet 5.5 | **ROLE:** Act as a UML designer.<br><br>**CONTEXT:** PayLink wallet and bill-payment backend.<br><br>**TASK:** Create or correct a PlantUML domain class diagram containing Customer, Wallet, LedgerEntry, Payment, Biller, Service, FeeRule and Agent. Include attributes, relationships and multiplicities.<br><br>**CONSTRAINTS:** Follow the assignment's payment lifecycle. Derive wallet balances from ledger entries. Include the required fee and ledger-entry types. Do not add unsupported classes.<br><br>**OUTPUT:** Complete editable PlantUML source and a list of corrections. | The first diagram contained incorrect payment statuses and stored wallet balances. The improved diagram corrected these issues and was checked against the ER diagram and requirements. | **FIXED, THEN ACCEPTED.** The first answer used incorrect payment states and stored balances. The improved prompt identified the defects and supplied the relevant assignment rules. |
+| 2026-11-23 | Aya | Design | Claude Sonnet 5.5 | **ROLE:** Act as a software architect and UML designer.<br><br>**CONTEXT:** PayLink bill-payment backend and its payment lifecycle.<br><br>**TASK:** Create a sequence diagram for paying a bill. Include the customer, PayLink modules, biller, fraud checks, fee calculation, wallet hold, idempotency and notifications.<br><br>**CONSTRAINTS:** Show success, biller refusal and a 10-second timeout. A timeout becomes Unknown and keeps funds held. Do not automatically refund Unknown payments. Apply agent commission only to completed agent payments.<br><br>**OUTPUT:** Complete valid PlantUML sequence diagram and a mapping to the payment steps in the brief. | The first diagrams omitted important payment handling and used incorrect states. The final improved diagram included the required flow, outcomes and payment lifecycle. | **REJECTED, THEN ACCEPTED.** Earlier versions omitted key steps or used incorrect states. The final prompt listed the missing behavior and exact lifecycle rules. |
+| 2026-11-25 | Nour | Design | Claude Sonnet 5.5 | **ROLE:** Act as a UML designer.<br><br>**CONTEXT:** PayLink's payment lifecycle and failed-payment refund requirements.<br><br>**TASK:** Create a sequence diagram for refunding a failed payment, covering biller refusal and an Unknown payment later confirmed as not received.<br><br>**CONSTRAINTS:** Release the hold, create a ledger entry, set the status to Refunded and notify the customer. Never refund Unknown before confirmation. Do not refund Completed payments or invent states.<br><br>**OUTPUT:** One complete, valid PlantUML sequence diagram. | Corrected the refund flow to cover both failure paths. The diagram included hold release, ledger recording, Refunded status and notification. | **ACCEPTED.** The earlier committed diagram refunded a Completed payment and used unsupported states. The improved diagram followed the assignment lifecycle. |
+| 2026-11-25 | Nour | Design | Claude Sonnet 5.5 | **ROLE:** Act as a UML designer.<br><br>**CONTEXT:** PayLink actors and functional requirements FR-1 to FR-28.<br><br>**TASK:** Review and correct the use-case diagram for Customer, Agent, Admin, Support Employee, Biller and Notification Provider.<br><br>**CONSTRAINTS:** Remove duplicate use cases. Cover required functions, including agent top-up, Unknown payment re-query, notification retry, reconciliation and audit logging. Use `<<include>>` for mandatory behavior and `<<extend>>` for optional or exceptional behavior. Map every use case to an FR.<br><br>**OUTPUT:** Complete valid PlantUML source and a use-case-to-FR table. | Corrected duplicate and missing use cases and added requirement traceability. The final diagram was rendered and reviewed after fixing a reversed relationship. | **REJECTED.** The committed diagram omitted required use cases and contained a duplicate. The first improved draft also had a reversed relationship and required further correction after the diagram was rendered. |
+| 2026-11-23 | Nour | DevOps | ChatGPT (GPT-6) | **ROLE:** Act as a DevOps engineer.<br><br>**CONTEXT:** PayLink uses Python FastAPI and GitHub Actions.<br><br>**TASK:** Create `.github/workflows/ci.yml` to run on every push, install dependencies, lint the code and execute automated tests.<br><br>**CONSTRAINTS:** Use the repository's actual structure and commands. Do not include deployment steps.<br><br>**OUTPUT:** Complete workflow file and a brief explanation of its steps. | Generated a CI workflow for dependency installation, linting and tests. Repository paths and test commands required adjustment. | **FIXED.** Updated paths and commands to match the actual repository. A more detailed revised prompt was prepared but not re-run. |
 
 ## Summary
 
-| Student | Stage       | Activities                  | Final Verdicts      |
-
+| Student | Stage | Activities | Final Verdicts |
+|---|---|---|---|
 | Mariam | Requirements | User stories and edge cases | 1 Accepted, 1 Fixed |
-| Aya    | Design       | Class and sequence diagrams | 2 Fixed, 1 Rejected |
-| Aya    | DevOps       | Dockerfile                  | 1 Accepted          |
-| Nour   | DevOps       | GitHub Actions CI           | 2 Fixed             |
+| Aya | Design | Class diagram and payment sequence diagram | 1 Fixed then Accepted, 1 Rejected then Accepted |
+| Nour | Design | Refund sequence diagram and use-case diagram | 1 Accepted, 1 Rejected |
+| Nour | DevOps | GitHub Actions CI workflow | 1 Fixed |
 
-*Total AI interactions:* 8
+*Total AI interactions:* 7
 
 *Overall observation:* AI assistance was used across Requirements, Design, and DevOps. Generated outputs were reviewed against the project brief and actual implementation needs. Some outputs were accepted directly, while others required corrections or rejection when they did not fully satisfy the project requirements.
